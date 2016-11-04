@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{94FF33E2-0189-43C1-9C4D-DEC88569D4F0}</ProjectGuid>
+    <ProjectGuid>{883839E7-25DE-4AC2-98F1-F04F785059FC}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Week6</RootNamespace>
-    <AssemblyName>Week6</AssemblyName>
+    <RootNamespace>Plugin1</RootNamespace>
+    <AssemblyName>Plugin1</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -43,13 +43,18 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ExpressionExtension.cs" />
-    <Compile Include="IPlugin.cs" />
+    <Compile Include="Plugin1.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Week6\6.2.csproj">
+      <Project>{94ff33e2-0189-43c1-9c4d-dec88569d4f0}</Project>
+      <Name>6.2</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
