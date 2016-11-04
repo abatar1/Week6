@@ -1,4 +1,4 @@
-﻿namespace Week6
+﻿namespace Framework
 {
     public interface IPlugin
     {
