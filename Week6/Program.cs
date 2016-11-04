@@ -1,7 +1,4 @@
-﻿using System;
-using System.Linq.Expressions;
-
-namespace Week6
+﻿namespace Week6
 {
     public class Program
     {
