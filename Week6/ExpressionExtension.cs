@@ -3,7 +3,7 @@ using System.Linq.Expressions;
 
 namespace Week6
 {
-    public static class ExpressionDifferentiateExtension
+    public static class ExpressionExtension
     {
         private static Expression SimpleDifferentiate
             (Expression exp, ParameterExpression x)
@@ -24,10 +24,10 @@ namespace Week6
         }
 
         private static Expression<Func<double, double>> AddSubDifferentiate
-            (BinaryExpression exp, ParameterExpression x)
+            (Expression exp, ParameterExpression x)
         {
-            var dLeftPart = SimpleDifferentiate(exp.Left, x);
-            var dRightPart = SimpleDifferentiate(exp.Right, x);
+            var dLeftPart = SimpleDifferentiate((exp as BinaryExpression).Left, x);
+            var dRightPart = SimpleDifferentiate((exp as BinaryExpression).Right, x);
 
             if (dLeftPart is ConstantExpression && dRightPart is ConstantExpression)
             {
@@ -44,10 +44,10 @@ namespace Week6
         }
 
         private static Expression<Func<double, double>> MultiplyDifferentiate
-            (BinaryExpression exp, ParameterExpression x)
+            (Expression exp, ParameterExpression x)
         {
-            var leftPart = exp.Left;
-            var rightPart = exp.Right;
+            var leftPart = (exp as BinaryExpression).Left;
+            var rightPart = (exp as BinaryExpression).Right;
             var dLeftPart = SimpleDifferentiate(leftPart, x);
             var dRightPart = SimpleDifferentiate(rightPart, x);
 
@@ -86,10 +86,10 @@ namespace Week6
         }
 
         private static Expression<Func<double, double>> DivideDifferentiate
-            (BinaryExpression exp, ParameterExpression x)
+            (Expression exp, ParameterExpression x)
         {
-            var leftPart = exp.Left;
-            var rightPart = exp.Right;
+            var leftPart = (exp as BinaryExpression).Left;
+            var rightPart = (exp as BinaryExpression).Right;
             var dLeftPart = SimpleDifferentiate(leftPart, x);
             var dRightPart = SimpleDifferentiate(rightPart, x);
 
@@ -140,6 +140,13 @@ namespace Week6
             }
         }
 
+        private static Expression<Func<double, double>> SinDifferentiate(Expression exp, ParameterExpression x)
+        {
+            return Expression.Lambda<Func<double, double>>(
+                Expression.Call(typeof(Math).GetMethod("Cos"), x)
+                , x);
+        }
+
         private static double GetConstant(Expression exp)
         {
             return (double)Expression.Lambda(exp).Compile().DynamicInvoke();
@@ -148,26 +155,33 @@ namespace Week6
         public static Expression<Func<double, double>> Differentiate
             (this Expression<Func<double, double>> expression)
         {
-            var expBin = (BinaryExpression)expression.Body;
+            var exp = expression.Body;
             var parameter = expression.Parameters[0];
 
-            if (expBin.NodeType == ExpressionType.Add)
+            if (exp.NodeType == ExpressionType.Add)
             {
-                return AddSubDifferentiate(expBin, parameter);
+                return AddSubDifferentiate(exp, parameter);
             }
-            else if (expBin.NodeType == ExpressionType.Subtract)
+            else if (exp.NodeType == ExpressionType.Subtract)
             {
-                return AddSubDifferentiate(expBin, parameter);
+                return AddSubDifferentiate(exp, parameter);
             }
-            else if (expBin.NodeType == ExpressionType.Multiply)
+            else if (exp.NodeType == ExpressionType.Multiply)
             {
-                return MultiplyDifferentiate(expBin, parameter);
+                return MultiplyDifferentiate(exp, parameter);
             }
-            else if (expBin.NodeType == ExpressionType.Divide)
+            else if (exp.NodeType == ExpressionType.Divide)
             {
-                return DivideDifferentiate(expBin, parameter);
-            }          
-            else throw new NotImplementedException();
+                return DivideDifferentiate(exp, parameter);
+            }
+            else if (exp.NodeType == ExpressionType.Call)
+            {
+                if (((MethodCallExpression)exp).Method.Name == "Sin")
+                {
+                    return SinDifferentiate(exp, parameter);
+                }
+            }
+            throw new NotImplementedException();
         }
     }
 }
