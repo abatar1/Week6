@@ -5,37 +5,12 @@ namespace Week6
 {
     public static class ExpressionExtension
     {
-        private static Expression SimpleDifferentiate
-            (Expression exp, ParameterExpression x)
-        {
-            if (exp is ConstantExpression)
-            {
-               return Expression.Constant(0.0);
-            }
-            else if (exp is ParameterExpression)
-            {
-                return Expression.Constant(1.0);
-            }
-            else
-            {
-                return (Expression.Lambda<Func<double, double>>(exp, x)
-                    .Differentiate() as Expression<Func<double, double>>).Body;
-            }
-        }
-
         private static Expression<Func<double, double>> AddSubDifferentiate
             (Expression exp, ParameterExpression x)
         {
-            var dLeftPart = SimpleDifferentiate((exp as BinaryExpression).Left, x);
-            var dRightPart = SimpleDifferentiate((exp as BinaryExpression).Right, x);
+            var dLeftPart = Expression.Lambda<Func<double, double>>((exp as BinaryExpression).Left, x).Differentiate().Body;
+            var dRightPart = Expression.Lambda<Func<double, double>>((exp as BinaryExpression).Right, x).Differentiate().Body;
 
-            if (dLeftPart is ConstantExpression && dRightPart is ConstantExpression)
-            {
-                var sign = (exp.NodeType == ExpressionType.Add) ? 1 : -1; 
-                return Expression.Lambda<Func<double, double>>(
-                    Expression.Constant(GetConstant(dLeftPart) + (sign) * GetConstant(dRightPart)),
-                    x);
-            }
             var tmpExp = (exp.NodeType == ExpressionType.Add) ?
                 Expression.Add(dLeftPart, dRightPart) :
                 Expression.Subtract(dLeftPart, dRightPart);
@@ -48,8 +23,8 @@ namespace Week6
         {
             var leftPart = (exp as BinaryExpression).Left;
             var rightPart = (exp as BinaryExpression).Right;
-            var dLeftPart = SimpleDifferentiate(leftPart, x);
-            var dRightPart = SimpleDifferentiate(rightPart, x);
+            var dLeftPart = Expression.Lambda<Func<double, double>>(leftPart, x).Differentiate().Body;
+            var dRightPart = Expression.Lambda<Func<double, double>>(rightPart, x).Differentiate().Body;
 
             if (leftPart is ConstantExpression && rightPart is ConstantExpression)
             {
@@ -58,19 +33,19 @@ namespace Week6
                     x);
             }
             else if (leftPart is ConstantExpression)
-            {       
+            {
                 return Expression.Lambda<Func<double, double>>(
                         Expression.Multiply(
-                            leftPart, 
-                            dRightPart), 
+                            leftPart,
+                            dRightPart),
                     x);
             }
             else if (rightPart is ConstantExpression)
-            {                              
+            {
                 return Expression.Lambda<Func<double, double>>(
                         Expression.Multiply(
-                            dLeftPart, 
-                            rightPart), 
+                            dLeftPart,
+                            rightPart),
                     x);
             }
             else
@@ -82,7 +57,7 @@ namespace Week6
                       Expression.Multiply(
                           dLeftPart, rightPart)),
                   x);
-            }             
+            }
         }
 
         private static Expression<Func<double, double>> DivideDifferentiate
@@ -90,57 +65,23 @@ namespace Week6
         {
             var leftPart = (exp as BinaryExpression).Left;
             var rightPart = (exp as BinaryExpression).Right;
-            var dLeftPart = SimpleDifferentiate(leftPart, x);
-            var dRightPart = SimpleDifferentiate(rightPart, x);
+            var dLeftPart = Expression.Lambda<Func<double,double>>(leftPart, x).Differentiate().Body;
+            var dRightPart = Expression.Lambda<Func<double, double>>(rightPart, x).Differentiate().Body;
 
-            if (leftPart is ConstantExpression && rightPart is ConstantExpression)
-            {
-                return Expression.Lambda<Func<double, double>>(
-                    Expression.Constant(0),
-                    x);
-            }
-            else if (rightPart is ConstantExpression)
-            {
-                if (GetConstant(rightPart) == 0)
-                {
-                    throw new Exception("Divide by zero.");
-                }
-                return Expression.Lambda<Func<double, double>>(
-                    Expression.Divide(
+            return Expression.Lambda<Func<double, double>>(
+                Expression.Divide(
+                    Expression.Subtract(
                         Expression.Multiply(
                             dLeftPart, rightPart),
-                        Expression.Constant(
-                            Math.Pow(GetConstant(rightPart), 2))),
-                    x);
-            }
-            else if (leftPart is ConstantExpression)
-            {
-                return Expression.Lambda<Func<double, double>>(
-                    Expression.Divide(
                         Expression.Multiply(
-                            dRightPart, leftPart),
-                        Expression.Multiply(
-                            rightPart,
-                            rightPart)),
-                    x);
-            }
-            else
-            {
-                return Expression.Lambda<Func<double, double>>(
-                    Expression.Divide(
-                        Expression.Subtract(
-                            Expression.Multiply(
-                                dLeftPart, rightPart),
-                            Expression.Multiply(
-                                leftPart, dRightPart)),
-                        Expression.Multiply(
-                            rightPart,
-                            rightPart)),
-                    x);
-            }
+                            leftPart, dRightPart)),
+                    Expression.Multiply(
+                        rightPart,
+                        rightPart)),
+                x);
         }
 
-        private static Expression<Func<double, double>> SinDifferentiate(Expression exp, ParameterExpression x)
+        private static Expression<Func<double, double>> SinDifferentiate(ParameterExpression x)
         {
             return Expression.Lambda<Func<double, double>>(
                 Expression.Call(typeof(Math).GetMethod("Cos"), x)
@@ -158,7 +99,15 @@ namespace Week6
             var exp = expression.Body;
             var parameter = expression.Parameters[0];
 
-            if (exp.NodeType == ExpressionType.Add)
+            if (exp is ConstantExpression)
+            {
+                return Expression.Lambda<Func<double, double>>(Expression.Constant(0.0), parameter);
+            }
+            else if (exp is ParameterExpression)
+            {
+                return Expression.Lambda<Func<double, double>>(Expression.Constant(1.0), parameter);
+            }
+            else if (exp.NodeType == ExpressionType.Add)
             {
                 return AddSubDifferentiate(exp, parameter);
             }
@@ -178,7 +127,7 @@ namespace Week6
             {
                 if (((MethodCallExpression)exp).Method.Name == "Sin")
                 {
-                    return SinDifferentiate(exp, parameter);
+                    return SinDifferentiate(parameter);
                 }
             }
             throw new NotImplementedException();
