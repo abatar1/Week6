@@ -13,10 +13,10 @@ namespace Application
             var fullPath = AppDomain.CurrentDomain.BaseDirectory;
             var index = fullPath.IndexOf(typeof(Program).Namespace);
             var dllDirectoryPath = fullPath.Remove(index) + "DllDirectory\\";
-            var files = Directory.GetFiles(dllDirectoryPath);
 
+            var fileNames = Directory.GetFiles(dllDirectoryPath);
             List<string> dllFileNames = new List<string>();
-            foreach (var file in files)
+            foreach (var file in fileNames)
             {
                 if (Path.GetExtension(file) == ".dll")
                     dllFileNames.Add(file);
