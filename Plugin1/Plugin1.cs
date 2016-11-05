@@ -9,7 +9,7 @@ namespace Plugin1
         {
             get
             {
-                throw new NotImplementedException();
+                return "Plugin1";
             }
 
             set

@@ -1,7 +1,6 @@
 ﻿using System;
 using Framework;
 using System.IO;
-using System.Collections.Generic;
 using System.Reflection;
 
 namespace Application
@@ -14,21 +13,18 @@ namespace Application
             var index = fullPath.IndexOf(typeof(Program).Namespace);
             var dllDirectoryPath = fullPath.Remove(index) + "DllDirectory\\";
 
-            var fileNames = Directory.GetFiles(dllDirectoryPath);
-            List<string> dllFileNames = new List<string>();
-            foreach (var file in fileNames)
-            {
-                if (Path.GetExtension(file) == ".dll")
-                    dllFileNames.Add(file);
-            }
+            var dllFileNames = Directory.GetFiles(dllDirectoryPath, "*.dll");
 
             foreach (var dllFile in dllFileNames)
             {
                 var dll = Assembly.LoadFile(dllFile);
                 foreach (Type type in dll.GetExportedTypes())
                 {
-                    if (Activator.CreateInstance(type) is IPlugin)
-                        Console.WriteLine(type.Name);                                   
+                    if (type.GetConstructor(Type.EmptyTypes) != null && typeof(IPlugin) == type.GetInterfaces()[0])
+                    {
+                        var obj = Activator.CreateInstance(type);
+                        Console.WriteLine(type.GetProperties()[0].GetValue(obj));
+                    }                            
                 }                   
             }            
         }
